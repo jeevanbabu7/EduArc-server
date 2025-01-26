@@ -38,17 +38,20 @@ def summary():
 
 @app.route("/api/summary/video", methods=["POST"])
 def video_summary():
-    print("Video Summary request received.")
-    video_url = request.json["video_url"]
-    output_file_name = request.json["output_file_name"]
-    output_file = f'data/audios/{output_file_name}.mp3'
-
-    extract_audio_from_video(video_url, output_file)
-    audio_text = transcribe_audio(output_file)
-    summary = summarize_large_text(audio_text)
-    # print('/n/n' , audio_text , '/n/n')
-    return jsonify({"response": summary})
-
+    try:
+        print("Video Summary request received.")
+        video_url = request.json["video_url"]
+        output_file_name = request.json["output_file_name"]
+        output_file = f'data/audios/{output_file_name}.mp3'
+        
+        extract_audio_from_video(video_url, output_file)
+        audio_text = transcribe_audio(output_file)
+        summary = summarize_large_text(audio_text)
+        # print('/n/n' , audio_text , '/n/n')
+        return jsonify({"ok": True, "response": summary})
+    except Exception as e:
+        # print(e)
+        return jsonify({"ok": False, "response": "Error occurred during audio processing."})
     
 
 @app.route('/api/upload', methods=['POST'])
@@ -57,4 +60,4 @@ def upload_file():
     add_to_chroma(file_link)
     return jsonify({"response": "File added to database."})
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
