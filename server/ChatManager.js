@@ -2,7 +2,7 @@ import User from './models/user.model.js';
 import { ChatSession } from './models/conversation.model.js';
 import { Message } from './models/conversation.model.js';
 import ModelResponse from './utils/cohereModel.js';
-
+import deepSeekResponse from './utils/deepSeekModel.js';
 class ChatManager {
   constructor() {
     this.chatSessions = [];
@@ -63,9 +63,11 @@ class ChatManager {
         //   body: JSON.stringify({query: message.content}),
         // });
 
-        // FOR GENERAL MODEL
-                
-        const data = await ModelResponse(message.content);
+        // FOR GENERAL MODEL (commad r+)
+        // const data = await ModelResponse(message.content);
+        
+        // FOR DEEPSEEK MODEL
+        const data = await deepSeekResponse(message.content, socket);
         console.log(data);
         
         const modelMessage = new Message({
@@ -74,7 +76,7 @@ class ChatManager {
           content: data, // data.answer for RAG model
         });
         const result = await modelMessage.save();
-        socket.emit('model_response', data); // data.answer for RAG model
+        // socket.emit('model_response', data); // data.answer for RAG model
         chatSession.messages.push(result._id);
     
         await chatSession.save();

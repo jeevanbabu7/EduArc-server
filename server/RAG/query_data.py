@@ -8,6 +8,8 @@ from langchain.prompts import ChatPromptTemplate
 import os
 from cohere import Client
 from dotenv import load_dotenv
+from together import Together
+import json
 
 load_dotenv()
 
@@ -64,71 +66,55 @@ def qandr(query_text):
 
     return response_text
 
-
-
-
-
-
-        
-    
-
 def generate_quiz_items(query_text, num_questions=1):
-
     PROMPT_TEMPLATE = """
-    Based on the following context, generate a multiple-choice question with four options. Also, specify the correct answer:
-    
-    Context:
-    {context}
-    
-    ---
-    
-    Generate the following:
-    1. A multiple-choice question related to the above context.
-    2. Four options labeled (A), (B), (C), (D).
-    3. Indicate the correct answer with the format: "Correct Answer: (Option)".
-    """
-    
-    # Load API key
-    cohere_api_key = os.environ['COHERE_API_KEY']  # Ensure COHERE_API_KEY is set in your environment
-    embedding_function = CohereEmbeddings(cohere_api_key=cohere_api_key)
-    
-    # Connect to the Chroma database
-    db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
-    
-    quiz_items = []
-    
-    for _ in range(num_questions):
-        # Fetch relevant context
-        results = db.similarity_search_with_relevance_scores(query_text, k=4)
-        context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
-        
-        # Format the prompt
-        prompt = PROMPT_TEMPLATE.format(context=context_text)
-        
-        # Generate text using Cohere
-        cohere_client = Client(cohere_api_key)
-        response = cohere_client.generate(
-            model="command",  # Use an appropriate model
-            prompt=prompt,
-            max_tokens=300,
-            temperature=0.5
-        )
-        
-        response_text = response.generations[0].text
-        
-        # Parse the response
-        question, options, answer = parse_response(response_text)
-        
-        # Store the quiz item
-        quiz_item = {
-            "question": question,
-            "options": options,
-            "answer": answer
-        }
-        quiz_items.append(quiz_item)
-    
-    return quiz_items
+    Generate a flashcard with the following structure:
+    - **Question:** A multiple-choice question.
+    - **Options:** 4 choices (A, B, C, D).
+    - **Correct Answer:** One correct answer.
+    - **Explanation:** A detailed explanation of why the answer is correct.
 
+    Example output:
+    {{
+        "question": "What is the capital of France?",
+        "options": ["Berlin", "Madrid", "Paris", "Rome"],
+        "correct_answer": "Paris",
+        "explanation": "Paris is the capital of France, known for the Eiffel Tower."
+    }}
+
+    Generate a similar flashcard for the topic: {context}.
+    """
+    client = Together(api_key=os.environ["TOGETHER_API_KEY"]) 
+    prompt = PROMPT_TEMPLATE.format(context=query_text)
+    try:
+        response = client.chat.completions.create(
+            model="deepseek-ai/DeepSeek-R1",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=300,
+            temperature=0.6
+        )
+
+        # Correct way to access response content
+        response_text = response.choices[0].message.content  # Use .content instead of ['content']
+        
+        # Remove markdown formatting and parse directly
+        cleaned_response = response_text.replace("```json", "").replace("```", "").strip()
+        
+        # Parse JSON directly
+        # quiz_item = json.loads(cleaned_response)
+        # quiz_items.append(quiz_item)
+
+    except json.JSONDecodeError as e:
+        print(f"JSON parsing error: {e}")
+        print(f"Raw response: {response_text}")
+    except KeyError as e:
+        print(f"Key error: {e}")
+    
+    return response_text
+
+
+
+    
 def parse_response(response_text):
     # Example parsing logic - Adjust this based on the actual format of response_text
     lines = response_text.strip().split('\n')

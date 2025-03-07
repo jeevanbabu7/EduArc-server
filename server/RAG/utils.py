@@ -33,3 +33,10 @@ def transcribe_audio(audio_file):
     return result["text"]
 
 # Example usage
+
+def extract_text_from_pdf(pdf_file):
+    text = ""
+    with pdfplumber.open(io.BytesIO(pdf_file.read())) as pdf:
+        for page in pdf.pages:
+            text += page.extract_text() + "\n"
+    return text.strip()

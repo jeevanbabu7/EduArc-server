@@ -13,8 +13,16 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    class: {
+    phone: {
         type: String,
+        required: true
+    },
+    age: {
+        type: Number,
+        required: true
+    },
+    favSubjects: {
+        type: [String],
         required: true
     }
 }, {timestamps: true});

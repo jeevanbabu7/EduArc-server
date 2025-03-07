@@ -7,6 +7,8 @@ import http from "http";
 import { Server } from "socket.io";
 import dotenv from "dotenv";
 import ChatManager from "./ChatManager.js";
+import chatRouter from "./routes/chat.route.js";
+import courseRouter from "./routes/course.route.js";
 dotenv.config();
 
 const app = express();
@@ -18,7 +20,7 @@ app.use(bodyParser.json());
 // Avoid CORS issues
 app.use(
   cors({
-    origin: process.env.ORIGIN,
+    origin: "*",
   })
 );
 // console.log(process.env.MONGO_URL);
@@ -31,7 +33,6 @@ mongoose.connect(process.env.MONGO_COMPASS_URL)
   .catch((error) => {
     console.error('Error connecting to MongoDB:', error);
   });
-
 // Socket.io
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -53,6 +54,8 @@ io.on('connection', (socket) => {
 
 // Routes
 app.use("/api/auth", UserRouter);
+app.use("/api/chat", chatRouter);
+app.use("/api/course", courseRouter);
 
 
 // Listen to port
