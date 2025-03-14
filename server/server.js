@@ -9,6 +9,8 @@ import dotenv from "dotenv";
 import ChatManager from "./ChatManager.js";
 import chatRouter from "./routes/chat.route.js";
 import courseRouter from "./routes/course.route.js";
+import summaryRouter from "./routes/summary.route.js";
+
 dotenv.config();
 
 const app = express();
@@ -56,7 +58,7 @@ io.on('connection', (socket) => {
 app.use("/api/auth", UserRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/course", courseRouter);
-
+app.use('api/summary', summaryRouter);
 
 // Listen to port
 const PORT = process.env.PORT || 3000;

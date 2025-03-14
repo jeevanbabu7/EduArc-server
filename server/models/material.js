@@ -10,7 +10,7 @@ const materialSchema = new mongoose.Schema({
         required: true
     },
     type: {
-        type: String
+        type: String,
         enum: ['material', 'pyq'],
     }
 }, {timestamps: true});

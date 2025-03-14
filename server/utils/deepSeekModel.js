@@ -26,16 +26,15 @@ const deepSeekResponse = async (query, socket) => {
     });
     let response = "";
     for await (const chunk of stream) {
-        socket.emit('model_response',chunk.choices[0]?.delta?.content || "");
+        // socket.emit('model_response',chunk.choices[0]?.delta?.content || "");
         process.stdout.write(chunk.choices[0]?.delta?.content || "");
         response += chunk.choices[0]?.delta?.content || "";
     }
+    socket.emit('model_response',response);
 
     return response;
     
 }
-
-
 
 export default deepSeekResponse;
 

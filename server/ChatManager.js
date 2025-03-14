@@ -39,6 +39,8 @@ class ChatManager {
     socket.on('send-message', async (message) => {
       try {
         const chatSession = await ChatSession.findById(message.chatSessionId);
+        console.log(message);
+        
       
         console.log(message.content);
         const newMessage = new Message({
@@ -46,6 +48,8 @@ class ChatManager {
             sender: message.sender,
             content: message.content,
         });
+        console.log(chatSession);
+        
         const res = await newMessage.save();
         console.log('Message saved');
         
