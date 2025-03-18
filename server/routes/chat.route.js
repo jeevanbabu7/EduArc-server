@@ -34,4 +34,16 @@ router.get("/get-messages/:chatSessionId", async (req, res) => {
     }
 });
 
+router.get("/get-chat-sessions/:userId", async (req, res) => {
+    const { userId } = req.params;
+    console.log('history',userId);
+    
+    try {
+        const chatSessions = await ChatSession.find({userId});
+        res.status(200).json({ chatSessions });
+    }catch(error) {
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+});
+
 export default router;

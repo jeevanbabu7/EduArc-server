@@ -28,7 +28,7 @@ app.use(
 // console.log(process.env.MONGO_URL);
 
 // MongoDB connection  // Use environment variable
-mongoose.connect(process.env.MONGO_COMPASS_URL)
+mongoose.connect(process.env.MONGO_URL)
   .then(() => {
     console.log('Connected to MongoDB');
   })

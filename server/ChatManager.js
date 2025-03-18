@@ -54,7 +54,7 @@ class ChatManager {
         console.log('Message saved');
         
         if(!chatSession) {
-            socket.emit('error', JSON.stringify("Chat session not found"));
+            socket.emit('error', JSON.stringify("cd secChat session not found"));
         }
         chatSession.messages.push(res._id);
     

@@ -10,6 +10,7 @@ from cohere import Client
 from dotenv import load_dotenv
 from together import Together
 import json
+import requests
 
 load_dotenv()
 
@@ -66,52 +67,9 @@ def qandr(query_text):
 
     return response_text
 
-def generate_quiz_items(query_text, num_questions=1):
-    PROMPT_TEMPLATE = """
-    Generate a flashcard with the following structure:
-    - **Question:** A multiple-choice question.
-    - **Options:** 4 choices (A, B, C, D).
-    - **Correct Answer:** One correct answer.
-    - **Explanation:** A detailed explanation of why the answer is correct.
-
-    Example output:
-    {{
-        "question": "What is the capital of France?",
-        "options": ["Berlin", "Madrid", "Paris", "Rome"],
-        "correct_answer": "Paris",
-        "explanation": "Paris is the capital of France, known for the Eiffel Tower."
-    }}
-
-    Generate a similar flashcard for the topic: {context}.
-    """
-    client = Together(api_key=os.environ["TOGETHER_API_KEY"]) 
-    prompt = PROMPT_TEMPLATE.format(context=query_text)
-    try:
-        response = client.chat.completions.create(
-            model="deepseek-ai/DeepSeek-R1",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=300,
-            temperature=0.6
-        )
-
-        # Correct way to access response content
-        response_text = response.choices[0].message.content  # Use .content instead of ['content']
-        
-        # Remove markdown formatting and parse directly
-        cleaned_response = response_text.replace("```json", "").replace("```", "").strip()
-        
-        # Parse JSON directly
-        # quiz_item = json.loads(cleaned_response)
-        # quiz_items.append(quiz_item)
-
-    except json.JSONDecodeError as e:
-        print(f"JSON parsing error: {e}")
-        print(f"Raw response: {response_text}")
-    except KeyError as e:
-        print(f"Key error: {e}")
+def generate_quiz_items(query_text):
+    url = "https://api.openai.com/v1/engines/text-davinci-003/completions"
     
-    return response_text
-
 
 
     
