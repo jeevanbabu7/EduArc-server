@@ -2,10 +2,12 @@ import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 
 export const createNewUser = async (req, res) => {
-    const {name, email, password, phone, age, favSubjects} = req.body;
+    console.log("Hii")
+    const {name, userId, email, password, phone, age, favSubjects} = req.body;
     try {
         const newUser = new User({
             name,
+            userId,
             email,
             password,
             phone,
