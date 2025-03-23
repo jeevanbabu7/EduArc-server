@@ -34,7 +34,9 @@ def summary():
     pdf_url = request.json["pdf_url"]
     file_path  = download_file(pdf_url)
     summary = process_and_summarize_pdf(file_path)
-    return jsonify({"response": summary})
+    if(summary == None):
+        return jsonify({"ok": False, "response": "Error occurred during summary"})
+    return jsonify({"ok": True, "response": summary})
 
 @app.route("/api/summary/video", methods=["POST"])
 def video_summary():

@@ -58,7 +58,7 @@ io.on('connection', (socket) => {
 app.use("/api/auth", UserRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/course", courseRouter);
-app.use('api/summary', summaryRouter);
+app.use('/api/summary', summaryRouter);
 
 // Listen to port
 const PORT = process.env.PORT || 3000;
