@@ -72,18 +72,45 @@ export const addMaterial = async (req, res) => {
 
 export const deleteMaterial = async (req, res) => {
     const { courseId, materialId } = req.body;
+    
     try {
-        await Files.findByIdAndDelete(materialId);
+        // Validate inputs
+        if (!courseId || !materialId) {
+            return res.status(400).json({ message: "Course ID and Material ID are required" });
+        }
+        
+        // Find the material first
+        const material = await Material.findById(materialId);
+        if (!material) {
+            return res.status(404).json({ message: "Material not found" });
+        }
+        
+        // Delete all associated files
+        if (material.fileUrls && material.fileUrls.length > 0) {
+            await Files.deleteMany({ _id: { $in: material.fileUrls } });
+        }
+        
+        // Update the course to remove reference to this material
         const course = await Course.findById(courseId);
-        course.materials = course.materials.filter(material => material != materialId);
+        if (!course) {
+            return res.status(404).json({ message: "Course not found" });
+        }
+        
+        course.materials = course.materials.filter(item => item.toString() !== materialId);
         await course.save();
-        res.status(201).json({ course });
-    }catch(err) {
-        console.log(err);
-        res.status(400).json({ err });
+        
+        // Delete the material itself
+        await Material.findByIdAndDelete(materialId);
+        
+        res.status(200).json({ 
+            message: "Material deleted successfully",
+            course 
+        });
+    } catch(err) {
+        console.error("Error deleting material:", err);
+        res.status(500).json({ message: "Internal server error", error: err.message });
     }
 }
-
 
 export const getMaterials = async (req, res) => {
     const { courseId } = req.params;
