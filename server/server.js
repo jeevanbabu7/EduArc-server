@@ -10,7 +10,7 @@ import ChatManager from "./ChatManager.js";
 import chatRouter from "./routes/chat.route.js";
 import courseRouter from "./routes/course.route.js";
 import summaryRouter from "./routes/summary.route.js";
-
+import fileRouter from "./routes/material.route.js";
 dotenv.config();
 
 const app = express();
@@ -35,6 +35,9 @@ mongoose.connect(process.env.MONGO_URL)
   .catch((error) => {
     console.error('Error connecting to MongoDB:', error);
   });
+
+  console.log(mongoose.modelNames());
+
 // Socket.io
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -59,6 +62,7 @@ app.use("/api/auth", UserRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/course", courseRouter);
 app.use('/api/summary', summaryRouter);
+app.use('/api/material', fileRouter);
 
 // Listen to port
 const PORT = process.env.PORT || 3000;

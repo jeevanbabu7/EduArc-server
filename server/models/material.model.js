@@ -1,18 +1,18 @@
 import mongoose from "mongoose";
 
 const materialSchema = new mongoose.Schema({
-    name: {
+    title: {
         type: String,
         required: true
     },
-    url: {
-        type: [String],
+    fileUrls: {
+        type: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Files'
+        }],
         required: true
     },
-    type: {
-        type: String,
-        enum: ['material', 'pyq'],
-    }
+    
 }, {timestamps: true});
 
 

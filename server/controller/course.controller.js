@@ -1,5 +1,5 @@
 import Course from "../models/course.js";
-import Material from "../models/material.js";
+import Material from "../models/files.js";
 
 export const addCourse = async (req, res) => {
     const { name, userId } = req.body;

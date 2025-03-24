@@ -8,7 +8,10 @@ const courseSchema = new mongoose.Schema({
         type: String
     },
     materials: {
-        type: [String]
+        type: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Material'
+        }]
     },
     pyq: {
         type: [String]

@@ -6,7 +6,7 @@ const Router = express.Router();
 Router.post('/new-summary', async (req, res) => {
     const { title, content, userId } = req.body;
     try{
-        const summaryContent = summary.map((item) => ({
+        const summaryContent = content.map((item) => ({
             title: item.title,
             content: item.content,
             
