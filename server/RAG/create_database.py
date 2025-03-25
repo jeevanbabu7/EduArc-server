@@ -71,14 +71,14 @@ def download_file(url, save_dir=DATA_PATH):
         raise Exception(f"Failed to download file: HTTP {response.status_code}")
 
 def main():
-    # generate_data_store()
-    add_to_chroma()
+    generate_data_store()
+    # add_to_chroma()
 
 # TO use all the PDFs in the data folder
-# def generate_data_store():
-#     documents = load_documents()
-#     chunks = split_text(documents)
-#     save_to_chroma(chunks)
+def generate_data_store():
+    documents = load_documents()
+    chunks = split_text(documents)
+    save_to_chroma(chunks)
 
 def add_to_chroma(cloud_link):
 
