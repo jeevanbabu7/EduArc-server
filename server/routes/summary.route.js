@@ -4,18 +4,21 @@ import Summary from '../models/summary.model.js';
 const Router = express.Router();
 
 Router.post('/new-summary', async (req, res) => {
-    const { title, content, userId } = req.body;
+
+    console.log(req.body);
+    
+    const { title, summary, userId } = req.body;
     try{
-        const summaryContent = content.map((item) => ({
+        const summaryContent = summary.map((item) => ({
             title: item.title,
             content: item.content,
             
         }));
     
-        const newSummary = new Summaryy({
+        const newSummary = new Summary({
             userId,
             title,
-            content: summaryContent
+            summary: summaryContent
         });
         await newSummary.save();
         res.status(201).json({ summary: newSummary });

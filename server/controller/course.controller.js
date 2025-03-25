@@ -15,18 +15,32 @@ export const addCourse = async (req, res) => {
     }
 }
 
+
 export const deleteCourse = async (req, res) => {
     const { courseId } = req.body;
-    console.log("hhhhhhhhhhh");
-    
+    console.log("Deleting course with ID:", courseId);
+
     try {
+        // Find the course
+        const course = await Course.findById(courseId);
+        console.log(course);
+        
+        if (!course) {
+            return res.status(404).json({ message: "Course not found" });
+        }
+
+        // Delete associated materials
+        await Material.deleteMany({ _id: { $in: course.materials } });
+
+        // Delete the course
         await Course.findByIdAndDelete(courseId);
-        res.status(201).json({ message: "Course deleted successfully" });
-    }catch(err) {
-        console.log(err);
-        res.status(400).json({ err });
+
+        res.status(204).json({ message: "Course and associated materials deleted successfully" });
+    } catch (err) {
+        console.error("Error deleting course:", err);
+        res.status(500).json({ error: "Internal Server Error" });
     }
-}
+};
 
 export const addMaterial = async (req, res) => {
     const { name, courseId, contentURLs } = req.body;

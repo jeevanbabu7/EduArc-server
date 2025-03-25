@@ -5,7 +5,7 @@ const summarySchema = new mongoose.Schema({
         type: String,
         required: true  
     },
-    heading: String,
+    title: String,
     summary: [
         {
             title: {
