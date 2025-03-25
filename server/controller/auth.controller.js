@@ -10,9 +10,6 @@ export const createNewUser = async (req, res) => {
             userId,
             email,
             password,
-            phone,
-            age,
-            favSubjects
         });
         await newUser.save();
         res.status(201).json(newUser);
