@@ -60,8 +60,15 @@ def video_summary():
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
     file_link = request.json["file_link"]
-    add_to_chroma(file_link)
-    return jsonify({"response": "File added to database."})
+    file_id = request.json["file_id"]
+    try:
+        # Download the file and add it to Chroma database with file_id as name
+        file_path = download_file(file_link)
+        add_to_chroma(file_path, collection_name=file_id, persist_directory="chroma/")
+        return jsonify({"ok": True, "response": f"File added to database with ID: {file_id}"})
+    except Exception as e:
+        print(f"Error creating Chroma database: {str(e)}")
+        return jsonify({"ok": False, "response": f"Error creating database: {str(e)}"})
 
 
 if __name__ == "__main__":

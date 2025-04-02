@@ -5,7 +5,8 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
 # from langchain.embeddings import OpenAIEmbeddings
 from langchain_openai import OpenAIEmbeddings
-from langchain_community.embeddings import CohereEmbeddings  # New import for Cohere
+# Replace the deprecated import
+from langchain_cohere import CohereEmbeddings
 import cohere
 from langchain_community.vectorstores import Chroma
 import openai 
@@ -80,11 +81,57 @@ def generate_data_store():
     chunks = split_text(documents)
     save_to_chroma(chunks)
 
-def add_to_chroma(cloud_link):
-
-    documents = load_document(cloud_link)
+def add_to_chroma(file_path, collection_name=None, persist_directory=CHROMA_PATH):
+    """
+    Creates a Chroma database from a PDF file.
+    
+    Args:
+        file_path: Path to the PDF file
+        collection_name: Optional name for the collection (defaults to None)
+        persist_directory: Directory to store the Chroma database
+    
+    Returns:
+        The path to the Chroma database
+    """
+    if isinstance(file_path, str) and file_path.startswith(('http://', 'https://')):
+        # If file_path is a URL, download it first
+        file_path = download_file(file_path)
+    
+    # Load the document
+    loader = PyPDFLoader(file_path)
+    documents = loader.load()
+    
+    # Split the text
     chunks = split_text(documents)
-    save_to_chroma(chunks)
+    
+    # Create database folder if it doesn't exist
+    os.makedirs(persist_directory, exist_ok=True)
+    
+    # Use specific collection path if provided
+    collection_path = os.path.join(persist_directory, collection_name) if collection_name else persist_directory
+    
+    # Clear out any existing database with the same collection name
+    if os.path.exists(collection_path) and collection_name:
+        shutil.rmtree(collection_path)
+    
+    # Create a new DB from the documents
+    # Fix the model parameter error by adding the required model parameter
+    embeddings = CohereEmbeddings(
+        cohere_api_key=cohere_api_key,
+        model="embed-english-v3.0",  # Specify a valid model
+        client=None
+    )
+    
+    db = Chroma.from_documents(
+        chunks, 
+        embeddings, 
+        persist_directory=collection_path,
+        collection_name=collection_name
+    )
+    db.persist()
+    print(f"Saved {len(chunks)} chunks to {collection_path}.")
+    
+    return collection_path
 
 def load_document(cloud_link):
     # Ensure data directory exists
@@ -113,9 +160,14 @@ def split_text(documents: list[Document]):
     chunks = text_splitter.split_documents(documents)
     print(f"Split {len(documents)} documents into {len(chunks)} chunks.")
 
-    document = chunks[10]
-    print(document.page_content)
-    print(document.metadata)
+    # Print a sample chunk only if there are enough chunks
+    if chunks and len(chunks) > 0:
+        # Get the first chunk or a safe index
+        sample_index = min(10, len(chunks) - 1)
+        document = chunks[sample_index]
+        print(f"Sample chunk (index {sample_index}):")
+        print(document.page_content)
+        print(document.metadata)
 
     return chunks
 
@@ -126,8 +178,15 @@ def save_to_chroma(chunks: list[Document]):
         shutil.rmtree(CHROMA_PATH)
 
     # Create a new DB from the documents.
+    # Update this instance too with the required model parameter
+    embeddings = CohereEmbeddings(
+        cohere_api_key=cohere_api_key,
+        model="embed-english-v3.0",  # Specify a valid model
+        client=None
+    )
+    
     db = Chroma.from_documents(
-        chunks, CohereEmbeddings(cohere_api_key=cohere_api_key), persist_directory=CHROMA_PATH
+        chunks, embeddings, persist_directory=CHROMA_PATH
     )
     db.persist()
     print(f"Saved {len(chunks)} chunks to {CHROMA_PATH}.")
