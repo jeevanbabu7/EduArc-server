@@ -22,9 +22,10 @@ def query():
 
 @app.route("/api/quiz", methods=["POST"])
 def quiz():
-    query = request.json["query"]
-    print("Query received: ", query)
-    response = generate_quiz_items(query)
+    print("Quiz request received.")
+    pdf_url = request.json["pdf_url"]
+    file_path  = download_file(pdf_url)
+    response = generate_quiz_items(file_path)
     print(response)
     return jsonify({"response": response})
 

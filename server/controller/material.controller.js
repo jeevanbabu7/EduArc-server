@@ -94,7 +94,7 @@ export const deleteMaterial = async (req, res) => {
         const course = await Course.findById(courseId);
         if (!course) {
             return res.status(404).json({ message: "Course not found" });
-        }
+        }   
         
         course.materials = course.materials.filter(item => item.toString() !== materialId);
         await course.save();

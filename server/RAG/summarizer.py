@@ -114,6 +114,7 @@ def summarize_large_text(text):
     )
     chunks = text_splitter.split_text(text)
     print(f"Split text into {len(chunks)} chunks.")
+    
 
     # Generate summaries
     results = generate_summary(chunks)

@@ -11,6 +11,12 @@ from dotenv import load_dotenv
 from together import Together
 import json
 import requests
+from flask import jsonify
+from dotenv import load_dotenv
+import os
+from langchain.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+import cohere
 
 load_dotenv()
 
@@ -67,12 +73,47 @@ def qandr(query_text):
 
     return response_text
 
-def generate_quiz_items(query_text):
-    url = "https://api.openai.com/v1/engines/text-davinci-003/completions"
-    
+def generate_quiz_items(pdf_file_path):
+    loader = PyPDFLoader(pdf_file_path)
+    documents = loader.load()
 
-
+    # Split text into chunks
+    print("Splitting text...")
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1500,
+        chunk_overlap=200,
+        add_start_index=True
+    )
+    chunks = text_splitter.split_documents(documents)
     
+    quiz_items = []
+    
+    # Process each chunk and generate quiz questions
+    for chunk in chunks:
+        try:
+            # Make API call to the ngrok endpoint
+            response = requests.post(
+                "https://ae53-35-247-188-130.ngrok-free.app/quiz",
+                json={"context": chunk.page_content},
+                headers={"Content-Type": "application/json"}
+            )
+
+            
+            # Check if the request was successful
+            if response.status_code == 200:
+                # Add the generated quiz items to our collection
+                quiz_data = response.json()
+                quiz_items.append(quiz_data)
+                print(quiz_data)
+                print(f"Generated quiz item from chunk {len(quiz_items)}")
+            else:
+                print(f"Failed to generate quiz for chunk: {response.status_code}, {response.text}")
+        except Exception as e:
+            print(f"Error generating quiz for chunk: {str(e)}")
+    
+    print(f"Generated {len(quiz_items)} quiz items in total")
+    return quiz_items
+
 def parse_response(response_text):
     # Example parsing logic - Adjust this based on the actual format of response_text
     lines = response_text.strip().split('\n')
