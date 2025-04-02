@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from query_data import qandr
 from query_data import generate_quiz_items
+from query_data import query_specific_collection
 from flask_cors import CORS
 from create_database import add_to_chroma
 from create_database import download_file
@@ -8,6 +9,7 @@ from summarizer import process_and_summarize_pdf
 from utils import extract_audio_from_video
 from summarizer import summarize_large_text
 from transcription import transcribe_audio
+from query_data import query_specific_collection
 
 app = Flask(__name__)
 CORS(app) 
@@ -56,6 +58,19 @@ def video_summary():
         # print(e)
         return jsonify({"ok": False, "response": "Error occurred during audio processing."})
     
+
+@app.route('/api/query-collection', methods=['POST'])
+def query_collection():
+    try:
+        file_id = request.json["file_id"]
+        query = request.json["query"]
+        print(f"Query received for collection {file_id}: {query}")
+        
+        response = query_specific_collection(query, file_id)
+        return jsonify({"ok": True, "answer": response})
+    except Exception as e:
+        print(f"Error querying collection: {str(e)}")
+        return jsonify({"ok": False, "answer": f"Error processing query: {str(e)}"})
 
 @app.route('/api/upload', methods=['POST'])
 def upload_file():

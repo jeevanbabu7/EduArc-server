@@ -2,7 +2,8 @@ import argparse
 # from dataclasses import dataclass
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
-from langchain_community.embeddings import CohereEmbeddings
+# Replace the deprecated import with the new one
+from langchain_cohere import CohereEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 import os
@@ -41,7 +42,11 @@ def qandr(query_text):
     #embedding_function = OpenAIEmbeddings()
     #db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
     cohere_api_key = os.environ['COHERE_API_KEY']  # Ensure COHERE_API_KEY is in .env
-    embedding_function = CohereEmbeddings(cohere_api_key=cohere_api_key)
+    # Update to include the required model parameter
+    embedding_function = CohereEmbeddings(
+        cohere_api_key=cohere_api_key,
+        model="embed-english-v3.0"  # Specify the embedding model
+    )
     
     db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
 
@@ -64,6 +69,82 @@ def qandr(query_text):
     cohere_api_key = os.getenv('COHERE_API_KEY')
     cohere_client = Client(cohere_api_key)
 
+    response = cohere_client.generate(
+        prompt=prompt, 
+        max_tokens=300, 
+        temperature=0.5
+    )
+    response_text = response.generations[0].text
+
+    return response_text
+
+def query_specific_collection(query_text, collection_name):
+    """
+    Query a specific collection in the Chroma database.
+    
+    Args:
+        query_text: The query to search for
+        collection_name: The name of the collection to search in
+    
+    Returns:
+        The response text from the model
+    """
+    # Initialize the embedding function
+    cohere_api_key = os.environ['COHERE_API_KEY']
+    embedding_function = CohereEmbeddings(
+        cohere_api_key=cohere_api_key,
+        model="embed-english-v3.0"
+    )
+    
+    # Access the specific collection with the correct directory structure
+    persist_directory = os.path.join(CHROMA_PATH, collection_name)
+    
+    # Debugging info
+    print(f"Accessing Chroma collection at: {persist_directory}")
+    
+    # Access the collection
+    db = Chroma(
+        persist_directory=persist_directory,
+        embedding_function=embedding_function,
+        collection_name=collection_name
+    )
+
+    # Search the DB
+    results = db.similarity_search_with_relevance_scores(query_text, k=4)
+    
+    # If no relevant results found
+    if len(results) == 0:
+        return "No relevant information found in the document about this query."
+    
+    # Check if the highest relevance score is too low
+    if results[0][1] < 0.5:  # Using a threshold of 0.5, adjust as needed
+        return "The document does not contain sufficient information about this topic."
+
+    # Format context from search results
+    context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
+    
+    # Create improved prompt that emphasizes relevance checking
+    RELEVANCE_PROMPT_TEMPLATE = """
+    Based on the following context from a document:
+
+    {context}
+
+    ---
+
+    Answer the following question: {question}
+    
+    Important: If the context does not contain relevant information to answer the question, 
+    respond with "The document does not contain information about this topic." 
+    Do not make up information or provide answers from general knowledge if the context 
+    doesn't support it.
+    """
+    
+    prompt_template = ChatPromptTemplate.from_template(RELEVANCE_PROMPT_TEMPLATE)
+    prompt = prompt_template.format(context=context_text, question=query_text)
+    
+    # Generate response using Cohere
+    cohere_client = Client(api_key=cohere_api_key)
+    
     response = cohere_client.generate(
         prompt=prompt, 
         max_tokens=300, 
